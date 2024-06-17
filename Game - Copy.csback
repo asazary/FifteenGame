@@ -1,0 +1,132 @@
+﻿namespace FifteenGame
+{
+    internal class Game
+    {
+        public static Game CurrentGame { get; private set; }
+        private const int EmptyPointValue = 0;
+        internal Point[,] Data { get; private set; }
+        internal int FieldSize = 3;
+        private readonly Point[] _winPosition = [];
+        private Variant WinVariant;
+
+        static Game()
+        {
+            CurrentGame = new Game();
+        }
+
+        private Game(int fieldSize = 3)
+        {
+            FieldSize = fieldSize;
+            WinVariant = Variant.GetWinVariant(fieldSize);
+
+            Data = new Point[FieldSize, FieldSize];
+
+            var number = 1;
+            for (var i = 0; i < FieldSize; i++)
+                for (var j = 0; j < FieldSize; j++)
+                    Data[i, j] = new Point(i, j, number++);
+            Data[FieldSize - 1, FieldSize - 1] = new Point(FieldSize - 1, FieldSize - 1, EmptyPointValue);
+
+            CurrentGame = this;
+        }
+
+        public static Game NewGame(int fieldSize = 3)
+        {
+            CurrentGame = new Game(fieldSize);
+            return CurrentGame;
+        }
+
+        public Point GetEmptyPoint()
+        {            
+            for (var i = 0; i < FieldSize; ++i)
+                for (var j = 0; j < FieldSize; ++j)
+                    if (Data[i, j].Val == EmptyPointValue)
+                        return Data[i, j];
+
+            throw new ApplicationException("Can't find empty point");
+        }
+
+        public bool CanMoveEmptyPoint(Point point, Direction direction)
+        {
+            var step = Steps.GetStep(direction);
+            return point.Row + step.Dy >= 0 && point.Row + step.Dy < FieldSize
+                && point.Col + step.Dx >= 0 && point.Col + step.Dx < FieldSize;
+        }        
+
+        public Point? Move(Direction direction)
+        {
+            // moving empty point
+            var emptyPoint = GetEmptyPoint();
+            if (!CanMoveEmptyPoint(emptyPoint, direction))
+            {                
+                return null;
+            }
+
+            var step = Steps.GetStep(direction);
+            // block next to empty point and the place where will be empty point
+            var realPoint = Data[emptyPoint.Row + step.Dy, emptyPoint.Col + step.Dx];
+            //var realPointStep = direction switch
+            //{
+            //    Direction.Left => Steps.GetStep(Direction.Right),
+            //    Direction.Right => Steps.GetStep(Direction.Left),
+            //    Direction.Up => Steps.GetStep(Direction.Down),
+            //    Direction.Down => Steps.GetStep(Direction.Up),
+            //    _ => throw new ApplicationException("Unknown direction")
+            //};
+
+            (realPoint.Val, emptyPoint.Val) = (emptyPoint.Val, realPoint.Val);
+            Data[emptyPoint.Row, emptyPoint.Col].Val = emptyPoint.Val;
+            Data[realPoint.Row, realPoint.Col].Val = realPoint.Val;
+                      
+            return emptyPoint;
+        }
+
+        public IEnumerable<Direction> ShuffleField(int randomStepsCount)
+        {
+            var random = new Random();
+            var directionList = new List<Direction>();
+
+            for (var i = 0; i < randomStepsCount; )
+            {
+                var direction = (Direction)random.Next(1, 5);                
+                var pointInfo = Move(direction);
+
+                if (pointInfo != null)
+                {
+                    i++;
+                    directionList.Add(direction);
+                }
+            }
+            return directionList;
+        }
+
+        public bool IsWin(Point[,] currentPositions)
+        {
+            var arr = new Point[FieldSize * FieldSize];
+            var k = 0;
+            for (var i = 0; i < FieldSize; i++)
+                for (var j = 0; j < FieldSize; j++)
+                    arr[k] = currentPositions[i, j];
+
+            return _winPosition.SequenceEqual(arr);
+        }
+
+
+
+        public void Solve()
+        {
+            var curData = Data.Clone();
+            var queue = new Queue<Direction?>();
+            var path = new Dictionary<Variant, Variant>();
+
+            var start = new Variant(Data, Direction.Left);
+            path[]
+
+            var curPos = GetEmptyPoint();
+            queue.Enqueue(null);
+
+            
+        }
+
+    }
+}
